@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <!--[if lt IE 9]>
+    <script src="http://cdn.amazeui.org/amazeui/2.7.2/js/amazeui.ie8polyfill.min.js"></script>
+    <![endif]-->
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="renderer" content="webkit">
+    <meta charset="UTF-8">
+    <title>百度文库 下载页</title>
+    <link href="http://cdn.amazeui.org/amazeui/2.7.2/css/amazeui.min.css" rel="stylesheet">
+    <link href="http://s.amazeui.org/assets/2.x/css/amaze.min.css?v=ivneioml" rel="stylesheet">
+    <script src="hhttp://cdn.amazeui.org/amazeui/2.7.2/js/amazeui.min.js"></script>
+    <script src="http://cdn.staticfile.org/modernizr/2.8.3/modernizr.js"></script>
+    <script src="https://cdn.bootcss.com/jquery/3.2.1/jquery.js"></script>
+    <script src="https://cdn.bootcss.com/layer/3.1.0/layer.js"></script>
+    <script src="jquery.base64.js"></script>
+    <script src="jquery.cookie.js"></script>
+</head>
+<body onload="loadusrinfo()">
+
+<div class="am-projects" style="background:#444;height:60px">
+    <div class="amz-container am-cf" margin-top="10">
+        <div>
+            <div align="center" style="color:#FFF;font-size:28px">百度文库 下载工具</div>
+        </div>
+    </div>
+
+</div>
+
+<header id="amz-header">
+    <div class="amz-container am-cf">
+        <nav>
+            <ul amz-header-nav am-collapse>
+                <li><a href="usem.html" target="_blank">使用教程</a></li>
+                <li><a href="crxm.html" target="_blank">插件教程</a></li>
+            </ul>
+        </nav>
+    </div>
+</header>
+
+<div>
+    <div>
+        <div>
+            <div style="margin-left:  3%;margin-right: 3%">
+                <pre style="font-size:20px;color:red">
+                     使用插件可以不用复制链接,具体方法查看插件教程。
+                </pre>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="am-g" style="margin-left: 2%">
+        <div class="am-u-sm-10"> <!--账号输入区-->
+            <div class="am-g">
+                <div class="am-u-sm-3">
+                    <p>文档链接:</p>
+                </div>
+                <div class="am-u-sm-9">
+                    <input id="docid" type="text" class="am-form-field" name="docid" style="width:100%;">
+                    <input id="downlink" type="hidden">
+                </div>
+            </div>
+            <div class="am-g">
+                <div class="am-u-sm-3">
+                    <p>账号:</p>
+                </div>
+
+                <div class="am-u-sm-9">
+                    <input id="baiduacc" type="text" class="am-form-field" name="usrid">
+                </div>
+            </div>
+            <div class="am-g">
+                <div class="am-u-sm-3">
+                    <p>
+                        密码:
+                    </p>
+                </div>
+
+                <div class="am-u-sm-9">
+                    <input id="baidupwd" type="password" class="am-form-field" name="usrpwd">
+
+                </div>
+            </div>
+            <br/>
+            <div style="width:400px;margin-left:0px">
+                <button id="upbtn" class="am-btn am-btn-success">提交</button>
+                <button id="savecoo" class="am-btn am-btn-success" style="margin-left: 10px">保存密码</button>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script type="text/javascript">
+    var flagid = 0;
+
+    function loadusrinfo() {
+        var usracc = $.cookie('usrname');
+        var usrpsw = $.cookie('usrpwd');
+        $('#baiduacc').val(usracc);
+        $('#baidupwd').val(usrpsw);
+    }
+
+    $('#savecoo').click(function () {
+        var usracc = $('#baiduacc').val();
+        var usrpsw = $('#baidupwd').val();
+        $.cookie('usrname', usracc, {expires: 365});
+        $.cookie('usrpwd', usrpsw, {expires: 365});
+    });
+
+    $('#upbtn').click(function () {
+        var usracc = $('#baiduacc').val();
+        var usrpwd = $('#baidupwd').val();
+
+        $.cookie('usrname', usracc, {expires: 365});
+        $.cookie('usrpwd', usrpwd, {expires: 365});
+
+        var docid = $('#docid').val();
+        var re = new RegExp(/[0-9a-z]{20,50}/);
+        docid = docid.match(re);
+        if (docid == null) {
+            layer.open({
+                type: 0,
+                title: false,
+                closeBtn: 0,
+                shadeClose: true,
+                skin: '',
+                content: '文档链接空，或非文库链接!'
+            });
+            return;
+        }
+        docid = docid.toString();
+        if (usracc == '') {
+            layer.open({
+                type: 0,
+                title: false,
+                closeBtn: 0,
+                shadeClose: true,
+                skin: '',
+                content: '请输入账号!'
+            });
+            return;
+        }
+        else if (usrpwd == '') {
+            layer.open({
+                type: 0,
+                title: false,
+                closeBtn: 0,
+                shadeClose: true,
+                skin: '',
+                content: '请输入密码!'
+            });
+            return;
+        }
+
+        $("#upbtn").attr("disabled", true);
+        $.post("./post.php",
+            {
+                usrname: usracc,
+                usrpass: usrpwd,
+                docinfo: docid,
+                taskid: "up_down_doc",
+            },
+            function (data) {
+                if (data == "up_doc_fail") {
+                    layer.msg("提交失败,稍后再试!", {time: 3000, offset: '120'});
+                    flagid = 1;
+                } else if (data == "no_this_doc") {
+                    layer.msg("此文档不存在，或已删除!", {time: 3000, offset: '120'});
+                    $("#upbtn").attr("disabled", false);
+                } else if (data == "down_failed") {
+                    $("#upbtn").attr("disabled", false);
+                    layer.open({
+                        type: 0,
+                        title: false,
+                        closeBtn: 0,
+                        shadeClose: true,
+                        skin: '',
+                        content: '下载失败!'
+                    });
+                } else if (data == "usr_not_exist") {
+                    $("#upbtn").attr("disabled", false);
+                    layer.open({
+                        type: 0,
+                        title: false,
+                        closeBtn: 0,
+                        shadeClose: true,
+                        skin: '',
+                        content: '账号输入错误，检查后重新输入!'
+                    });
+                } else if (data == "pass_error") {
+                    $("#upbtn").attr("disabled", false);
+                    layer.open({
+                        type: 0,
+                        title: false,
+                        closeBtn: 0,
+                        shadeClose: true,
+                        content: '密码输入错误，检查后重新输入!'
+                    });
+                } else if (data == "wealth_not_enough") {
+                    $("#upbtn").attr("disabled", false);
+                    layer.open({
+                        type: 0,
+                        title: false,
+                        closeBtn: 0,
+                        shadeClose: true,
+                        content: '财富值不足!'
+                    });
+                } else if (data == "rmb_doc") {
+                    $("#upbtn").attr("disabled", false);
+                    layer.open({
+                        type: 0,
+                        title: false,
+                        closeBtn: 0,
+                        shadeClose: true,
+                        content: '付费文档无法下载，只可以下载,下载券文档!'
+                    });
+                } else {
+                    var retarr = data.split("----");
+                    var linkstr = retarr[0];
+                    var wealth = retarr[1];
+                    var downlink = $.base64.decode(linkstr, 'utf8');
+                    $('#downlink').val(downlink);
+                    window.location.href = downlink;
+                    layer.msg("剩余财富值: " + wealth, {time: 5000, offset: '120'});
+                    $("#upbtn").attr("disabled", false);
+                }
+            }
+        );
+    });
+
+    function sleep(numberMillis) {
+        var now = new Date();
+        var exitTime = now.getTime() + numberMillis;
+        while (true) {
+            now = new Date();
+            if (now.getTime() > exitTime)
+                return;
+        }
+    }
+</script>
+</body>
+</html>
